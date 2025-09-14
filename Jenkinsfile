@@ -7,7 +7,7 @@ pipeline {
     }
     
     environment {
-        // Remove hardcoded WAR_FILE path
+        WAR_FILE = 'C:/Users/Admin/.jenkins/workspace/pipeline/target/roshambo.war'
         TOMCAT_URL = 'http://localhost:7080'
     }
     
@@ -25,30 +25,30 @@ pipeline {
         }
 
         stage('Deploy to Tomcat') {
-            steps {
-                script {
-                    // Automatically locate the WAR file inside the 'web/target' directory
-                    def warFile = findFiles(glob: 'web/target/*.war')[0]
-                    echo "WAR file found at: ${warFile.path}"
+    steps {
+        script {
+            def warFilePath = "${WAR_FILE}"
+            echo "WAR file path: ${warFilePath}"
 
-                    if (warFile) {
-                        echo 'Deploying WAR to Tomcat...'
+            if (fileExists(warFilePath)) {
+                echo 'WAR file found, deploying...'
 
-                        withCredentials([usernamePassword(credentialsId: 'tomcat-creds',
-                                                         usernameVariable: 'TOMCAT_USER',
-                                                         passwordVariable: 'TOMCAT_PASSWORD')]) {
-                            bat """
-                                curl --upload-file "${warFile.path}" ^
-                                --user %TOMCAT_USER%:%TOMCAT_PASSWORD% ^
-                                "${TOMCAT_URL}/manager/text/deploy?path=/roshambo&update=true"
-                            """
-                        }
-                    } else {
-                        error('WAR file not found!')
-                    }
+                withCredentials([usernamePassword(credentialsId: 'tomcat-creds',
+                                                  usernameVariable: 'TOMCAT_USER',
+                                                  passwordVariable: 'TOMCAT_PASSWORD')]) {
+                    bat """
+                        curl --upload-file "${warFilePath}" ^
+                        --user %TOMCAT_USER%:%TOMCAT_PASSWORD% ^
+                        "${TOMCAT_URL}/manager/text/deploy?path=/roshambo&update=true"
+                    """
                 }
+            } else {
+                error('WAR file not found!')
             }
         }
+    }
+}
+
     } // end stages
 
     post {
