@@ -7,7 +7,7 @@ pipeline {
     }
     
     environment {
-        TOMCAT_URL = 'http://localhost:7080'
+        TOMCAT_URL = 'http://localhost:8081'
     }
     
     stages {
